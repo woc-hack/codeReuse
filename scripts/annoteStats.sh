@@ -41,22 +41,3 @@ for i in {2,3,4,7,8,9,13,14,16,17,18,21,22,23}; do
 	~/lookup/lsort 10G -t\; -k1,1 -n > data/annoteStats/$i.hist;
 done
 
-#######
-n=13;
-for i in {0..31}; do
-	cat data/annoteStats/$n.$i.hist |
-	awk '{if (NF==1) print $1" -1"; else print }' > tmp;
-	mv tmp data/annoteStats/$n.$i.hist;
-done
-#
-n=18;
-join -1 2 -2 2 -a1 -a2 \
-                <(cat data/annoteStats/$n.0.hist | ~/lookup/lsort 10G -k2,2) \
-                <(cat data/annoteStats/$n.1.hist | ~/lookup/lsort 10G -k2,2) |
-recJoin $(for j in {2..31};do echo "data/annoteStats/$n.$j.hist";done) |
-awk '{sum=0;for(i=2; i<=NF; i++) {sum+=$i} print $1";"sum}' |
-~/lookup/lsort 10G -t\; -k1,1 -n > data/annoteStats/$n.hist;
-#
-n=13;
-mv data/annoteStats/$n.*.hist data/annoteStats/split/ 
-
