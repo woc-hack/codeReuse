@@ -31,3 +31,28 @@ for i in {2,3,4,7,8,9,13,14,16,17,18,21,22,23}; do
 	~/lookup/lsort 10G -t\; -k1,1 -n > data/annoteStats/$i.hist;
 done
 
+#basic statistics
+##number;count;mean;std;min;q1;median;q3;max
+for i in {2,3,4,7,8,9,13,14,16,17,18,21,22,23}; do
+	first=$(cat data/annoteStats/$i.hist | head -1 | cut -d\; -f1);
+	n=1;
+	if [ $first -eq -1 ]; then
+		n=2;
+	fi;
+	res=$(cat data/annoteStats/$i.hist | sed -n "$n,\$p" |
+		awk -F\; '{sum+=$2; sumpr+=$1*$2} END {print sum";"sumpr";"sumpr/sum}');
+	count=$(echo $res | cut -d\; -f1);
+	mean=$(echo $res | cut -d\; -f3);
+	std=$(cat data/annoteStats/$i.hist | sed -n "$n,\$p" |
+                awk -F\; -v mean=$mean -v sum=$count '{pr+=(($1-mean)**2)*$2} END {print sqrt(pr/sum)}');
+	min=$(cat data/annoteStats/$i.hist | sed -n "$n p" | cut -d\; -f1);
+	q1=$(cat data/annoteStats/$i.hist | sed -n "$n,\$p" |
+		awk -F\; -v count=$count '{sum+=$2; if (sum > count/4) print $1}' | head -1);
+	median=$(cat data/annoteStats/$i.hist | sed -n "$n,\$p" |
+                awk -F\; -v count=$count '{sum+=$2; if (sum > count/2) print $1}' | head -1);
+	q3=$(cat data/annoteStats/$i.hist | sed -n "$n,\$p" |
+                awk -F\; -v count=$count '{sum+=$2; if (sum > count*3/4) print $1}' | head -1);
+	max=$(cat data/annoteStats/$i.hist | tail -1 | cut -d\; -f1);
+	echo "$i;$count;$mean;$std;$min;$q1;$median;$q3;$max";
+done > data/annoteStats/stat;
+
