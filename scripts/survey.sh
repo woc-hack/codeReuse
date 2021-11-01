@@ -25,7 +25,11 @@ zcat /da5_data/basemaps/gz/annote17.gz |
 head -60000000 |
 gzip >../data/survey/rand.gz;
 
-#initial survey
+#initial survey table
+#1$upstream;2$nm;3$nblob;4$ns;5$ft;6$lt;7$ncore;8$ncmt;9$na;
+#10$blobtime;11$blob;12$delay;13$cPr;14$cST;
+#15$downstream;16$nm;17$nblob;18$ns;19$ft;20$lt;21$ncore;22$ncmt;23$na
+#24$type;25$u2dCount;26$fCount
 for set in sTb bTb bTs sTs rand; do
     #getting first 1 million entries
     zcat ../data/survey/$set.gz |
@@ -69,3 +73,34 @@ for set in sTb bTb bTs sTs rand; do
     done > ../data/survey/initial/$set.2
 done
 
+#candidates
+for set in sTb bTb bTs sTs rand; do
+    cat ../data/survey/initial/$set.counts |
+    awk '{i+=1; if (i%100 == 1) print}' |
+    sed 's| *||' |
+    cut -d' ' -f2 |
+    while read line; do
+        u=$(echo $line | cut -d\; -f1);
+        d=$(echo $line | cut -d\; -f2);
+        type=$(cat ../data/survey/initial/$set.2 |
+            grep "$u" |
+            grep "$d" |
+            cut -d\; -f24 |
+            ~/lookup/lsort |
+            uniq -c |
+            ~/lookup/lsort 10G -nr |
+            head -1 |
+            sed 's| *||' |
+            cut -d' ' -f2);
+        cat ../data/survey/initial/$set.2 |
+        grep "$u" |
+        grep "$d" |
+        awk -F\; -v type="$type" '{if (length($24) < 10 && $24 == type) print}' |
+        head -1;
+    done > ../data/survey/initial/$set.candidates;
+    c=$(cat ../data/survey/initial/$set.candidates | wc -l);
+    cat ../data/survey/initial/$set.candidates |
+    ~/lookup/lsort 10G -t\; -k24,24 |
+    awk -F\; -v c=$(($c/120+1)) '{i+=1; if(i%c == 0) print}' \
+    >> ../data/survey/initial/candidates;
+done
