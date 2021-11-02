@@ -70,10 +70,11 @@ for set in sTb bTb bTs sTs rand; do
             sed 's| *||' | 
             cut -d' ' -f1);
         echo "$line;$type;$count;$fcount";
-    done > ../data/survey/initial/$set.2
-done
+    done > ../data/survey/initial/$set.2 ;
+done;
 
 #candidates
+rm ../data/survey/initial/candidates 2>/dev/null;
 for set in sTb bTb bTs sTs rand; do
     cat ../data/survey/initial/$set.counts |
     awk '{i+=1; if (i%100 == 1) print}' |
@@ -103,4 +104,52 @@ for set in sTb bTb bTs sTs rand; do
     ~/lookup/lsort 10G -t\; -k24,24 |
     awk -F\; -v c=$(($c/120+1)) '{i+=1; if(i%c == 0) print}' \
     >> ../data/survey/initial/candidates;
-done
+done;
+#augmentation
+cat ../data/survey/initial/candidates |
+cut -d\; -f1,11,15 |
+awk -F\; '{print $1";"$2"\n"$3";"$2}' |
+~/lookup/lsort |
+uniq |
+while read line; do
+    P=$(echo $line | cut -d\; -f1);
+    b=$(echo $line | cut -d\; -f2);
+    cdat=$(echo $b |
+        ~/lookup/getValues -f b2c |
+        cut -d\; -f2 |
+        ~/lookup/getValues -f c2P |
+        grep "$P" |
+        cut -d\; -f1 |
+        ~/lookup/getValues c2dat |
+        ~/lookup/lsort 20G -t\; -k2,2 -n |
+        head -1 |
+        cut -d\; -f1,2,4,5);
+    c=$(echo $cdat | cut -d\; -f1);
+    t=$(echo $cdat | cut -d\; -f2);
+    date=$(date -d @$t | awk '{print $2" "$3" "$6}');
+    A=$(echo $cdat |
+        cut -d\; -f3 |
+        ~/lookup/getValues -f a2A |
+        cut -d\; -f2);
+    #works only on da5
+    f=$(echo $c | 
+        ~/lookup/cmputeDiff3.perl 2>/dev/null |
+        grep $b |
+        head -1 |
+        cut -d\; -f2);
+    echo "$P;$b;$c;$date;$A;$f";
+done > ../data/survey/initial/candidates.pb;
+#27$uc;28$udate;29$uA;30$uf
+#31$dc;32$ddate;33$dA;34$df
+cat ../data/survey/initial/candidates | 
+while read line; do
+    ub=$(echo $line | cut -d\; -f1,11);
+    pbu=$(cat ../data/survey/initial/candidates.pb | 
+        grep "$ub" |
+        cut -d\; -f3-6);
+    db=$(echo $line | awk -F\; '{print $15";"$11}');
+    pbd=$(cat ../data/survey/initial/candidates.pb | 
+        grep "$db" |
+        cut -d\; -f3-6);
+    echo "$line;$pbu;$pbd";
+done > ../data/survey/initial/candidates.aug;
