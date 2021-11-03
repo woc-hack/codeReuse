@@ -178,7 +178,7 @@ echo "mahmoud_up-repo;0;0;0;0;0;0;0;0;0;mahmoud-blob;0;0;0;mahmoud_down-repo;0;0
 >> ../data/survey/initial/candidates.final;
 #upstream table
 echo "name,email,blob,upstream_url,udate,ucommit,ufile" \
-> ../data/survey/initial/candidates.up
+> ../data/survey/initial/candidates_up.csv;
 cat ../data/survey/initial/candidates.final |
 while read line; do
     name=$(echo $line |
@@ -199,10 +199,10 @@ while read line; do
         cut -d\; -f30 |
         sed 's|,|-|g' );
     echo "$name,$email,$blob,$up_url,$udate,$ucommit,$ufile"
-done >> ../data/survey/initial/candidates.up
+done >> ../data/survey/initial/candidates_up.csv;
 #downstream table
 echo "name,email,blob,upstream_url,udate,ucommit,downstream_url,ddate,dcommit,dfile" \
-> ../data/survey/initial/candidates.down
+> ../data/survey/initial/candidates_down.csv;
 cat ../data/survey/initial/candidates.final |
 while read line; do
     name=$(echo $line |
@@ -228,4 +228,4 @@ while read line; do
         cut -d\; -f34 |
         sed 's|,|-|g' );
     echo "$name,$email,$blob,$up_url,$udate,$ucommit,$down_url,$ddate,$dcommit,$dfile"
-done >> ../data/survey/initial/candidates.down
+done >> ../data/survey/initial/candidates_down.csv;
