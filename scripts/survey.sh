@@ -131,9 +131,8 @@ while read line; do
         cut -d\; -f3 |
         ~/lookup/getValues -f a2A |
         cut -d\; -f2);
-    #works only on da5
     f=$(echo $c | 
-        ~/lookup/cmputeDiff3.perl 2>/dev/null |
+        ~/lookup/cmputeDiff3.perl 2>/dev/null | #works only on da5
         grep $b |
         head -1 |
         cut -d\; -f2);
@@ -153,3 +152,80 @@ while read line; do
         cut -d\; -f3-6);
     echo "$line;$pbu;$pbd";
 done > ../data/survey/initial/candidates.aug;
+
+#final table
+#cleansing
+cat ../data/survey/initial/candidates.aug | 
+awk -F\; '{if (NF==34) print}' |
+while read line; do
+    va=$(echo $line | 
+        cut -d\; -f29,33 |
+        sed 's|;|\n|' |
+        egrep '<[A-Za-z0-9._%+-]{1,}@[A-Za-z0-9.-]{1,}\.[A-Za-z]{2,}>' |
+        wc -l);
+    if [[ $va -ne 2 ]]; then
+        continue;
+    fi;
+    echo $line;
+done > ../data/survey/initial/candidates.final;
+echo "audris_up-repo;0;0;0;0;0;0;0;0;0;audris-blob;0;0;0;audris_down-repo;0;0;0;0;0;0;0;0;0;0;0;\
+    audris-up-commit;audris-up-date;audris upstream <audris@utk.edu>;audris-up-filename;\
+    audris-down-commit;audris-down-date;audris downstream <audris@utk.edu>;audris-down-filename"\
+>> ../data/survey/initial/candidates.final;
+echo "mahmoud_up-repo;0;0;0;0;0;0;0;0;0;mahmoud-blob;0;0;0;mahmoud_down-repo;0;0;0;0;0;0;0;0;0;0;0;\
+    mahmoud-up-commit;mahmoud-up-date;mahmoud upstream <mjahansh@vols.utk.edu>;mahmoud-up-filename;\
+    mahmoud-down-commit;mahmoud-down-date;mahmoud downstream <mahmoud.jahanshahi@gmail.com>;mahmoud-down-filename"\
+>> ../data/survey/initial/candidates.final;
+#upstream table
+echo "name,email,blob,upstream_url,udate,ucommit,ufile" \
+> ../data/survey/initial/candidates.up
+cat ../data/survey/initial/candidates.final |
+while read line; do
+    name=$(echo $line |
+        cut -d\; -f29 |
+        sed 's| <[^<>]*>||' |
+        sed 's|,|-|g' );
+    email=$(echo $line |
+        cut -d\; -f29 |
+        sed 's|.* <\([^<>]*\)>|\1|' |
+        sed 's|,|-|g' );
+    blob=$(echo $line | cut -d\; -f11);
+    up_url=$(echo $line |
+        cut -d\; -f1 |
+        sed 's|_|/|;s|^|https://github.com/|');
+    udate=$(echo $line | cut -d\; -f28);
+    ucommit=$(echo $line | cut -d\; -f27);
+    ufile=$(echo $line | 
+        cut -d\; -f30 |
+        sed 's|,|-|g' );
+    echo "$name,$email,$blob,$up_url,$udate,$ucommit,$ufile"
+done >> ../data/survey/initial/candidates.up
+#downstream table
+echo "name,email,blob,upstream_url,udate,ucommit,downstream_url,ddate,dcommit,dfile" \
+> ../data/survey/initial/candidates.down
+cat ../data/survey/initial/candidates.final |
+while read line; do
+    name=$(echo $line |
+        cut -d\; -f33 |
+        sed 's| <[^<>]*>||' |
+        sed 's|,|-|g' );
+    email=$(echo $line |
+        cut -d\; -f33 |
+        sed 's|.* <\([^<>]*\)>|\1|' |
+        sed 's|,|-|g' );
+    blob=$(echo $line | cut -d\; -f11);
+    up_url=$(echo $line |
+        cut -d\; -f1 |
+        sed 's|_|/|;s|^|https://github.com/|');
+    udate=$(echo $line | cut -d\; -f28);
+    ucommit=$(echo $line | cut -d\; -f27);
+    down_url=$(echo $line |
+        cut -d\; -f15 |
+        sed 's|_|/|;s|^|https://github.com/|');
+    ddate=$(echo $line | cut -d\; -f32);
+    dcommit=$(echo $line | cut -d\; -f31);
+    dfile=$(echo $line | 
+        cut -d\; -f34 |
+        sed 's|,|-|g' );
+    echo "$name,$email,$blob,$up_url,$udate,$ucommit,$down_url,$ddate,$dcommit,$dfile"
+done >> ../data/survey/initial/candidates.down
