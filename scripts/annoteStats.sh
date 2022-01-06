@@ -56,3 +56,32 @@ for i in {2,3,4,7,8,9,13,14,16,17,18,21,22,23}; do
 	echo "$i;$count;$mean;$std;$min;$q1;$median;$q3;$max";
 done > data/annoteStats/stat;
 
+# comparing total stats with two files
+echo "" >> ../data/annoteStats/stat;
+for j in {0..1}; do
+	echo "annote $j:";
+	for i in {2,3,4,7,8,9,13,14,16,17,18,21,22,23}; do
+		path="../data/annoteStats/split/$i.$j.hist";
+		first=$(cat $path | head -1 | awk '{print $2}');
+		n=1;
+		if [ $first -eq -1 ]; then
+			n=2;
+		fi;
+		res=$(cat $path | sed -n "$n,\$p" |
+			awk '{sum+=$1; sumpr+=$1*$2} END {print sum";"sumpr";"sumpr/sum}');
+		count=$(echo $res | cut -d\; -f1);
+		mean=$(echo $res | cut -d\; -f3);
+		std=$(cat $path | sed -n "$n,\$p" |
+			awk -v mean=$mean -v sum=$count '{pr+=(($2-mean)**2)*$1} END {print sqrt(pr/sum)}');
+		min=$(cat $path | sed -n "$n p" | awk '{print $2}');
+		q1=$(cat $path | sed -n "$n,\$p" |
+			awk -v count=$count '{sum+=$1; if (sum > count/4) print $2}' | head -1);
+		median=$(cat $path | sed -n "$n,\$p" |
+			awk -v count=$count '{sum+=$1; if (sum > count/2) print $2}' | head -1);
+		q3=$(cat $path | sed -n "$n,\$p" |
+			awk -v count=$count '{sum+=$1; if (sum > count*3/4) print $2}' | head -1);
+		max=$(cat $path | tail -1 | awk '{print $2}');
+		echo "$i;$count;$mean;$std;$min;$q1;$median;$q3;$max";
+	done;
+	echo "";
+done >> ../data/annoteStats/stat;
