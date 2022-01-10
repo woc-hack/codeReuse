@@ -27,9 +27,9 @@ awk -F\; '{sum=0;for(i=2; i<=NF; i++) {sum+=$i} print $1";"sum}' |
 
 # augmentation
 # blob;Ncopy;Nline;ext
-# too slow, not feasible!
-for i in {0..7}; do
-    zcat ../data/blobs/blobs.$i.gz |
+# too slow
+for i in {0..1}; do
+    cat ../data/blobs/blobs.$i |
     while read line; do
         n=$(
             echo $line | 
@@ -52,3 +52,13 @@ for i in {0..7}; do
     done > ../data/blobs/ablobs.$i;
 done;
 
+# bP
+# P;nmc;nblob;nsa;ncore;ncmt;na;blob;Ncopy
+for i in {0..1}; do
+    zcat /da5_data/basemaps/gz/annote$i.gz |
+    cut -d\; -f1-4,7-9,11 |
+    ~/lookup/lsort 10G |
+    uniq -c |
+    awk '{print $2";"$1}' \
+    > ../data/blobs/uPb.$i;
+done;

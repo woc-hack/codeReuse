@@ -85,3 +85,13 @@ for j in {0..1}; do
 	done;
 	echo "";
 done >> ../data/annoteStats/stat;
+
+# random samples
+for i in {0..31}; do
+	shuf -n 20000000 <(zcat /da5_data/basemaps/gz/annote$i.gz);
+done > ../data/annoteStats/rand0;
+
+for i in {0..9}; do
+	shuf -n 60000000 <(zcat /da5_data/basemaps/gz/annote$i.gz);
+done > ../data/annoteStats/rand1;
+
