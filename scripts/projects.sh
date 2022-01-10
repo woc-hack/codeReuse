@@ -7,7 +7,8 @@ for i in {0..1}; do
         cut -d\; -f1-4,7-9 |
         ~/lookup/lsort 20G |
         uniq -c |
-        awk '{print $2";"$1}' \
+        awk '{print $2";"$1}' |
+        ~/lookup/lsort 10G -t\; -k1,1 \
         > ../data/projects/uP.$i;
         zcat /da5_data/basemaps/gz/annote$i.gz |
         cut -d\; -f15-18,21-23 |

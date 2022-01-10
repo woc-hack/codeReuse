@@ -62,3 +62,19 @@ for i in {0..1}; do
     awk '{print $2";"$1}' \
     > ../data/blobs/uPb.$i;
 done;
+
+# getting first blobs for each project
+# P;blob
+for i in {0..1}; do
+    cat ../data/projects/uP.$i |
+    cut -d\; -f1 |
+    ~/lookup/getValues -f P2fb \
+    > ../data/blobs/uP2fb.$i;
+done;
+# adding project data to each line
+for i in {0..1}; do
+    LC_ALL=C LANG=C join -t\; \
+        <(cat ../data/projects/uP.$i | cut -d\; -f1-7) \
+        ../data/blobs/uP2fb.$i \
+    > ../data/blobs/uP2fb2.$i;
+done;
