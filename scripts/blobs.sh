@@ -25,33 +25,6 @@ recJoin $(for i in {2..31}; do echo "../data/blobs/split/blobs.$i";done) |
 awk -F\; '{sum=0;for(i=2; i<=NF; i++) {sum+=$i} print $1";"sum}' |
 ~/lookup/splitSecCh.perl ../data/blobs/blobs. 8;
 
-# augmentation
-# blob;Ncopy;Nline;ext
-# too slow
-for i in {0..1}; do
-    cat ../data/blobs/blobs.$i |
-    while read line; do
-        n=$(
-            echo $line | 
-            cut -d\; -f1 | 
-            ~/lookup/showCnt blob 2> /dev/null | 
-            wc -l
-        ); 
-        f=$(
-            echo $line |
-            cut -d\; -f1 |
-            ~/lookup/getValues -f b2f |
-            awk -F. '{print $NF}' |
-            ~/lookup/lsort |
-            uniq -c |
-            ~/lookup/lsort 10G -nr |
-            head -1 |
-            awk '{print $2}'
-        );
-        echo "$line;$n;$f";
-    done > ../data/blobs/ablobs.$i;
-done;
-
 # bP
 # P;nmc;nblob;nsa;ncore;ncmt;na;blob;Ncopy
 for i in {0..1}; do
@@ -72,9 +45,53 @@ for i in {0..1}; do
     > ../data/blobs/uP2fb.$i;
 done;
 # adding project data to each line
+# P;nmc;nblob;nsa;ncore;ncmt;na;blob
 for i in {0..1}; do
     LC_ALL=C LANG=C join -t\; \
         <(cat ../data/projects/uP.$i | cut -d\; -f1-7) \
         ../data/blobs/uP2fb.$i \
     > ../data/blobs/uP2fb2.$i;
+done;
+
+# consolidating all blobs
+# P;nmc;nblob;nsa;ncore;ncmt;na;blob;Ncopy
+for i in {0..1}; do
+    LC_ALL=C LANG=C join -a1 \
+        <(cat ../data/blobs/uP2fb2.$i |
+            ~/lookup/lsort 20G ) \
+        <(cat ../data/blobs/uPb.$i | 
+            sed 's|;\([0-9]*$\)| \1|' |
+            ~/lookup/lsort 20G -k1,1) |
+    awk '{if (NF == 2) {print $1";"$2} else {print $1";"0}}' \
+    > ../data/blobs/uPab.$i;
+done;
+
+# augmentation
+# blob;ext
+for i in {0..1}; do
+    cat ../data/blobs/uP2fb2.$i |
+    cut -d\; -f8 |
+    while read blob; do
+        f=$(
+            echo $blob |
+            ~/lookup/getValues -f b2f |
+            cut -d\; -f2 |
+            awk -F. '{print $NF}' |
+            ~/lookup/lsort |
+            uniq -c |
+            ~/lookup/lsort 10G -nr |
+            head -1 |
+            awk '{print $2}'
+        );
+        echo "$blob;$f";
+    done > ../data/blobs/b2ext.$i;
+done;
+
+# getting first authors
+# blob;time;Author;commit
+for i in {0..1}; do
+    cat ../data/blobs/uP2fb2.$i |
+    cut -d\; -f8 |
+    ~/lookup/getValues b2fA \
+    > ../data/blobs/bfA.$i;
 done;
