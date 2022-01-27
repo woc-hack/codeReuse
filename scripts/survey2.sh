@@ -23,8 +23,11 @@ for i in {0..1}; do
     zcat /da5_data/basemaps/gz/annote$i.gz |
     awk -F\; '{if ($8<10 && $4==0 && $22<10 && $18==0) print}' \
     > ../data/survey/second/sTs.$i;
+done;
 #random
 for i in {0..1}; do
 	shuf -n 20000000 <(zcat /da5_data/basemaps/gz/annote$i.gz) \
     > ../data/survey/second/rand.$i;
 done;
+
+
