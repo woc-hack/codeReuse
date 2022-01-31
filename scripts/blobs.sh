@@ -65,6 +65,13 @@ for i in {0..1}; do
     awk '{if (NF == 2) {print $1";"$2} else {print $1";"0}}' \
     > ../data/blobs/uPab.$i;
 done;
+# random 
+for i in {0..1}; do
+    j=$((1-$i));
+    shuf -n 20000000 <../data/blobs/uPab.$j \
+    > ../data/blobs/uPab_test.$i;
+done;
+
 
 # augmentation
 # blob;ext
