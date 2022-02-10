@@ -65,12 +65,25 @@ for i in {0..1}; do
     awk '{if (NF == 2) {print $1";"$2} else {print $1";"0}}' \
     > ../data/blobs/uPab.$i;
 done;
-# random 
+# include both a1 and a2 + sort based on blobs
+for i in {0..1}; do
+    LC_ALL=C LANG=C join -a1 -a2 \
+        <(cat ../data/blobs/uP2fb2.$i |
+            ~/lookup/lsort 20G ) \
+        <(cat ../data/blobs/uPb.$i | 
+            sed 's|;\([0-9]*$\)| \1|' |
+            ~/lookup/lsort 20G -k1,1) |
+    awk '{if (NF == 2) {print $1";"$2} else {print $1";"0}}' |
+    ~/lookup/lsort 20G -t\; -k8,8 \
+    > ../data/blobs/uPab.bs.$i;
+done;
+# random for model fit test
 for i in {0..1}; do
     j=$((1-$i));
     shuf -n 20000000 <../data/blobs/uPab.$j \
     > ../data/blobs/uPab_test.$i;
 done;
+
 
 
 # augmentation
@@ -93,6 +106,50 @@ for i in {0..1}; do
         echo "$blob;$f";
     done > ../data/blobs/b2ext.$i;
 done;
+# alternative
+for i in {0..1}; do
+    cat ../data/blobs/uPab.$i |
+    cut -d\; -f8 |
+    ~/lookup/getValues b2f |
+    sed 's|;.*\.|;|' \
+    > ../data/blobs/b2ext.$i; 
+done;
+# alternative
+# blob;P;nmc;nblob;nsa;ncore;ncmt;na;Ncopy;filename
+for i in {0..1}; do
+    for j in {0..127}; do
+        LC_ALL=C LANG=C join -t\; -1 8 -2 1 \
+            ../data/blobs/uPab.bs.$i \
+            <(zcat /da?_data/basemaps/gz/b2fFullU$j.s) \
+        > ../data/blobs/b2f/b2f.$i.$j;
+    done;
+done;
+for i in {0..1}; do
+    for j in {0..127}; do
+        cat ../data/blobs/b2f/b2f.$i.$j |
+        cut -d\; -f10;
+    done > ../data/fileCorp.$i;
+done;
+for i in {0..1}; do
+    for j in {0..127}; do
+        cat ../data/blobs/b2f/b2f.$i.$j |
+        sed 's|;.*\.|;|' |
+        awk -F\; '{if (length($2) > 10) {print $1";"} else {print} }' |
+        uniq > ../data/blobs/b2f/b2ext.$i.$j;
+    done;
+done;
+## finding blobs with just one extension
+for i in {0..1}; do
+    for j in {0..127}; do
+        cat ../data/blobs/b2f/b2ext.$i.$j |
+        cut -d\; -f1 |
+        uniq -c |
+        awk '{if ($1 == 1) print $2}' > tmp.$i.$j;
+        LC_ALL=C LANG=C join -t\; tmp.$i.$j ../data/blobs/b2f/b2ext.$i.$j;
+    done > ../data/blobs/b2ext.$i;
+    rm tmp.$i.*;
+done;
+
 
 # getting first authors
 # blob;time;Author;commit
