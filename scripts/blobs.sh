@@ -84,8 +84,6 @@ for i in {0..1}; do
     > ../data/blobs/uPab_test.$i;
 done;
 
-
-
 # augmentation
 # blob;ext
 for i in {0..1}; do
@@ -133,12 +131,13 @@ done;
 for i in {0..1}; do
     for j in {0..127}; do
         cat ../data/blobs/b2f/b2f.$i.$j |
+        cut -d\; -f1,10 |
         sed 's|;.*\.|;|' |
         awk -F\; '{if (length($2) > 10) {print $1";"} else {print} }' |
         uniq > ../data/blobs/b2f/b2ext.$i.$j;
     done;
 done;
-## finding blobs with just one extension
+## finding blobs with just one extension and creating b2ext table
 for i in {0..1}; do
     for j in {0..127}; do
         cat ../data/blobs/b2f/b2ext.$i.$j |
@@ -149,7 +148,14 @@ for i in {0..1}; do
     done > ../data/blobs/b2ext.$i;
     rm tmp.$i.*;
 done;
-
+# joining with the main table
+# blob;P;nmc;nblob;nsa;ncore;ncmt;na;Ncopy;ext
+for i in {0..1}; do
+    LC_ALL=C LANG=C join -t\; -1 8 -2 1 -a1 \
+        ../data/blobs/uPab.bs.$i \
+        ../data/blobs/b2ext.$i \
+    > ../data/blobs/uPabf.bs.$i;
+done;
 
 # getting first authors
 # blob;time;Author;commit
@@ -158,4 +164,13 @@ for i in {0..1}; do
     cut -d\; -f8 |
     ~/lookup/getValues b2fA \
     > ../data/blobs/bfA.$i;
+done;
+# alternative
+for i in {0..1}; do
+    for j in {0..127}; do
+        LC_ALL=C LANG=C join -t\; -1 8 -2 1 \
+            ../data/blobs/uPab.bs.$i \
+            <(zcat /da?_data/basemaps/gz/b2fAFullU$j.s | cut -d\; -f1,3) |
+        uniq > ../data/blobs/b2fA/b2fA.$i.$j;
+    done;
 done;
