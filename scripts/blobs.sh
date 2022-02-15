@@ -174,3 +174,20 @@ for i in {0..1}; do
         uniq > ../data/blobs/b2fA/b2fA.$i.$j;
     done;
 done;
+
+# node_module blobs
+for i in {0..1}; do
+    for j in {0..127}; do
+        cat ../data/blobs/b2f/b2f.$i.$j |
+        grep -v node_modules | 
+        cut -d\; -f1 |
+        uniq;
+    done > ../data/blobs/nodeEX.$i;
+done;
+# joining with main table
+for i in {0..1}; do
+    LC_ALL=C LANG=C join -t\; \
+        ../data/blobs/nodeEX.$i \
+        ../data/blobs/uPabf.bs.$i \
+    > ../data/blobs/blobs.$i;
+done;
