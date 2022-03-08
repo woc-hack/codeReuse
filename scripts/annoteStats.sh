@@ -91,7 +91,75 @@ for i in {0..31}; do
 	shuf -n 20000000 <(zcat /da5_data/basemaps/gz/annote$i.gz);
 done > ../data/annoteStats/rand0;
 
-for i in {0..9}; do
-	shuf -n 60000000 <(zcat /da5_data/basemaps/gz/annote$i.gz);
-done > ../data/annoteStats/rand1;
-
+# contingency table
+# too slow
+ns=(0 1 10 100000000000000000000);
+ncmt=(0 10 100 100000000000000000000);
+d=(0 1 3 100000000000000000000);
+cr=(0 1259539200 1417305600 1575072000 100000000000000000000);
+for i in {1..3}; do
+	nsalb=$ns[$i]
+	nsaub=$ns[$i+1]
+	for j in {1..3}; do
+		ncalb=$ncmt[$j]
+		ncaub=$ncmt[$j+1]
+		for k in {1..3}; do
+			nsblb=$ns[$k]
+			nsbub=$ns[$k+1]
+			for l in {1..3}; do
+				ncblb=$ncmt[$l]
+				ncbub=$ncmt[$l+1]
+				for m in {1..3}; do
+					dlb=$d[$m];
+					dub=$d[$m+1];
+					for n in {1..4}; do
+						crlb=$cr[$n];
+						crub=$cr[$n+1];
+						count=$(
+							cat data/annoteStats/rand0 |
+							awk -F\; -v nsalb=$nsalb -v nsaub=$nsaub -v ncalb=$ncalb -v ncaub=$ncaub \
+								-v nsblb=$nsblb -v nsbub=$nsbub -v ncblb=$ncblb -v ncbub=$ncbub \
+								-v dlb=$dlb -v dub=$dub -v crlb=$crlb -v crub=$crub \
+								'{if ($4>=nsalb && $4<nsaub && $8>=ncalb && $8<ncaub && \
+									$18>=nsblb && $18<nsbub && $22>=ncblb && $22<ncbub && \
+									$12>=dlb && $12<dub && $10>=crlb && $10<crub) print 1}' |
+							wc -l 
+						)
+						echo "upns$i;upcmt$j;downns$k;downncmt$l;d$m;cr$n;$count";
+					done;
+				done;
+			done;
+		done;
+	done;
+done;
+# adding big/med/sml variable
+cat data/annoteStats/rand0 |
+awk -F\; '{if ($4>10 && $8>100) {print $0";1"} else if ($4==0 && $8<10) {print $0";3"} else {print $0";2"} }' |
+awk -F\; '{if ($18>10 && $22>100) {print $0";1"} else if ($18==0 && $22<10) {print $0";3"} else {print $0";2"} }' \
+> tmp;
+rm data/annoteStats/rand0;
+mv tmp data/annoteStats/rand0;
+#
+d=(0 1 3 1000);
+cr=(0 1259539200 1417305600 1575072000 1700000000);
+for i in {1..3}; do
+	for j in {1..3}; do
+		for k in {1..3}; do
+			dlb=$d[$k];
+			dub=$d[$k+1];
+			for l in {1..4}; do
+				crlb=$cr[$l];
+				crub=$cr[$l+1];
+				count=$(
+					cat data/annoteStats/rand0 |
+					awk -F\; -v a=$i -v b=$j -v \
+						-v dlb=$dlb -v dub=$dub -v crlb=$crlb -v crub=$crub \
+						'{if ($24==i && $25==j && \
+							$12>=dlb && $12<dub && $10>=crlb && $10<crub) print 1}' |
+					wc -l 
+				)
+				echo "a$i;b$j;d$k;cr$l;$count";
+			done;
+		done;
+	done;
+done > data/annoteStats/contingency.rand;
