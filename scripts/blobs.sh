@@ -174,6 +174,13 @@ for i in {0..1}; do
         uniq > ../data/blobs/b2fA/b2fA.$i.$j;
     done;
 done;
+for i in {0..1}; do
+    for j in {0..127}; do
+        cat ../data/blobs/b2fA/b2fA.$i.$j |
+        cut -d\; -f1,10 |
+        uniq;
+    done > ../data/blobs/b2fA.$i;
+done;
 
 # node_module blobs
 for i in {0..1}; do
