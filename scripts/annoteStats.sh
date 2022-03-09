@@ -93,10 +93,10 @@ done > ../data/annoteStats/rand0;
 
 # contingency table
 # too slow
-ns=(0 1 10 100000000000000000000);
-ncmt=(0 10 100 100000000000000000000);
-d=(0 1 3 100000000000000000000);
-cr=(0 1259539200 1417305600 1575072000 100000000000000000000);
+ns=(0 1 10 1000000);
+ncmt=(0 10 100 1000000000);
+d=(0 1 3 100);
+cr=(0 1259539200 1417305600 1575072000 1700000000);
 for i in {1..3}; do
 	nsalb=$ns[$i]
 	nsaub=$ns[$i+1]
@@ -139,27 +139,13 @@ awk -F\; '{if ($18>10 && $22>100) {print $0";1"} else if ($18==0 && $22<10) {pri
 > tmp;
 rm data/annoteStats/rand0;
 mv tmp data/annoteStats/rand0;
-#
-d=(0 1 3 1000);
-cr=(0 1259539200 1417305600 1575072000 1700000000);
-for i in {1..3}; do
-	for j in {1..3}; do
-		for k in {1..3}; do
-			dlb=$d[$k];
-			dub=$d[$k+1];
-			for l in {1..4}; do
-				crlb=$cr[$l];
-				crub=$cr[$l+1];
-				count=$(
-					cat data/annoteStats/rand0 |
-					awk -F\; -v a=$i -v b=$j -v \
-						-v dlb=$dlb -v dub=$dub -v crlb=$crlb -v crub=$crub \
-						'{if ($24==i && $25==j && \
-							$12>=dlb && $12<dub && $10>=crlb && $10<crub) print 1}' |
-					wc -l 
-				)
-				echo "a$i;b$j;d$k;cr$l;$count";
-			done;
-		done;
-	done;
-done > data/annoteStats/contingency.rand;
+# alternative
+cat data/annoteStats/rand0 |
+awk -F\; '{
+	if ($12<1) {k=1} else if ($12<3) {k=2} else {k=3};
+	if ($10<1259539200) {l=1} else if ($10<1417305600) {l=2} else if ($10<1575072000) {l=3} else {l=4};
+	print "a"$24";b"$25";d"k";cr"l}' |
+~/lookup/lsort 100G |
+uniq -c |
+awk '{print $2";"$1}' \
+> data/annoteStats/contingency.rand;
