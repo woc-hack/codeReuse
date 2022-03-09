@@ -149,3 +149,21 @@ awk -F\; '{
 uniq -c |
 awk '{print $2";"$1}' \
 > data/annoteStats/contingency.rand;
+# adding combinations with 0 count
+for i in {1..3}; do
+	for j in {1..3}; do
+		for k in {1..3}; do
+			for l in {1..4}; do
+				echo "a$i;b$j;d$k;cr$l";
+			done;
+		done;
+	done;
+done | 
+sort > tmp;
+join -a1 \
+	tmp \
+	<(cat data/annoteStats/contingency.rand | sed 's|;\([0-9]*$\)| \1|') |
+awk '{if (NF == 2) {print $1";"$2} else {print $1";"0}}' \
+> tmp2;
+rm tmp data/annoteStats/contingency.rand;
+mv tmp2 data/annoteStats/contingency.rand;
