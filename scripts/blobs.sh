@@ -157,31 +157,6 @@ for i in {0..1}; do
     > ../data/blobs/uPabf.bs.$i;
 done;
 
-# getting first authors
-# blob;time;Author;commit
-for i in {0..1}; do
-    cat ../data/blobs/uP2fb2.$i |
-    cut -d\; -f8 |
-    ~/lookup/getValues b2fA \
-    > ../data/blobs/bfA.$i;
-done;
-# alternative
-for i in {0..1}; do
-    for j in {0..127}; do
-        LC_ALL=C LANG=C join -t\; -1 8 -2 1 \
-            ../data/blobs/uPab.bs.$i \
-            <(zcat /da?_data/basemaps/gz/b2fAFullU$j.s | cut -d\; -f1,3) |
-        uniq > ../data/blobs/b2fA/b2fA.$i.$j;
-    done;
-done;
-for i in {0..1}; do
-    for j in {0..127}; do
-        cat ../data/blobs/b2fA/b2fA.$i.$j |
-        cut -d\; -f1,10 |
-        uniq;
-    done > ../data/blobs/b2fA.$i;
-done;
-
 # node_module blobs
 for i in {0..1}; do
     for j in {0..127}; do
