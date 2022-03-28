@@ -205,21 +205,3 @@ LC_ALL=C LANG=C join -t\; -1 8 -2 1 -a1 \
 awk -F\; '{if (NF == 9) {print $0";"} else {print}}' \
 > tmp;
 mv tmp data/blobs/blobs.rand;
-LC_ALL=C LANG=C join -t\; -a1 \
-	data/blobs/blobs.rand \
-	data/blobs/b2def.rand \
-> tmp.rand;
-mv tmp.rand data/blobs/blobs.rand;
-
-for i in {0..127}; do
-	LC_ALL=C LANG=C join -t\; \
-		<(cat data/blobs/blobs.rand | cut -d\; -f8) \
-		<(zcat /da?_data/basemaps/gz/c2PtAbflDefFullU$i.s |
-			cut -d\; -f5,7,8 |
-			~/lookup/lsort 50G -t\; -k1,1) \
-	> data/blobs/b2def/b2def.rand.$i;
-done;
-for i in {0..127}; do
-	cat data/blobs/b2def/b2def.rand.$i |
-	uniq;
-done > data/blobs/b2def.rand;
