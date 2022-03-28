@@ -132,14 +132,16 @@ for i in {1..3}; do
 		done;
 	done;
 done;
+# alternative
 # adding big/med/sml variable
+# #24$up;#25$down
 cat data/annoteStats/rand0 |
 awk -F\; '{if ($4>10 && $8>100) {print $0";1"} else if ($4==0 && $8<10) {print $0";3"} else {print $0";2"} }' |
 awk -F\; '{if ($18>10 && $22>100) {print $0";1"} else if ($18==0 && $22<10) {print $0";3"} else {print $0";2"} }' \
 > tmp;
 rm data/annoteStats/rand0;
 mv tmp data/annoteStats/rand0;
-# alternative
+# building contingency table
 cat data/annoteStats/rand0 |
 awk -F\; '{
 	if ($12<1) {k=1} else if ($12<3) {k=2} else {k=3};
@@ -167,3 +169,57 @@ awk '{if (NF == 2) {print $1";"$2} else {print $1";"0}}' \
 > tmp2;
 rm tmp data/annoteStats/contingency.rand;
 mv tmp2 data/annoteStats/contingency.rand;
+
+# rand uniq blobs
+cat data/annoteStats/rand0 |
+cut -d\; -f1-4,7-9,11 |
+~/lookup/lsort 100G -t\; -k8 |
+uniq -c | 
+awk '{print $2";"$1}' \
+> data/blobs/blobs.rand;
+
+# blob 2 file
+for i in {0..127}; do
+	LC_ALL=C LANG=C join -t\; -1 8 -2 1 \
+		data/blobs/blobs.rand \
+		<(zcat /da?_data/basemaps/gz/b2fFullU$i.s) \
+	> data/blobs/b2f/b2f.rand.$i;
+done;
+for i in {0..127}; do
+    cat data/blobs/b2f/b2f.rand.$i |
+    sed 's|;.*\.|;|' |
+    awk -F\; '{if (length($2) > 10) {print $1";"} else {print} }' |
+    uniq > data/blobs/b2f/b2ext.rand.$i;
+done;
+for i in {0..127}; do
+	cat data/blobs/b2f/b2ext.rand.$i |
+	cut -d\; -f1 |
+	uniq -c |
+	awk '{if ($1 == 1) print $2}' > tmp.rand.$i;
+	LC_ALL=C LANG=C join -t\; tmp.rand.$i data/blobs/b2f/b2ext.rand.$i;
+done > data/blobs/b2ext.rand;
+rm tmp.rand.*;
+LC_ALL=C LANG=C join -t\; -1 8 -2 1 -a1 \
+	data/blobs/blobs.rand \
+	data/blobs/b2ext.rand |
+awk -F\; '{if (NF == 9) {print $0";"} else {print}}' \
+> tmp;
+mv tmp data/blobs/blobs.rand;
+LC_ALL=C LANG=C join -t\; -a1 \
+	data/blobs/blobs.rand \
+	data/blobs/b2def.rand \
+> tmp.rand;
+mv tmp.rand data/blobs/blobs.rand;
+
+for i in {0..127}; do
+	LC_ALL=C LANG=C join -t\; \
+		<(cat data/blobs/blobs.rand | cut -d\; -f8) \
+		<(zcat /da?_data/basemaps/gz/c2PtAbflDefFullU$i.s |
+			cut -d\; -f5,7,8 |
+			~/lookup/lsort 50G -t\; -k1,1) \
+	> data/blobs/b2def/b2def.rand.$i;
+done;
+for i in {0..127}; do
+	cat data/blobs/b2def/b2def.rand.$i |
+	uniq;
+done > data/blobs/b2def.rand;
