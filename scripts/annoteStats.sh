@@ -90,6 +90,10 @@ done >> ../data/annoteStats/stat;
 for i in {0..31}; do
 	shuf -n 20000000 <(zcat /da5_data/basemaps/gz/annote$i.gz);
 done > ../data/annoteStats/rand0;
+# blob sort
+cat data/annoteStats/rand0 |
+~/lookup/lsort 100G -t\; -k11,11 \
+> data/annoteStats/rand0.bs;
 
 # contingency table
 # too slow
@@ -98,23 +102,23 @@ ncmt=(0 10 100 1000000000);
 d=(0 1 3 100);
 cr=(0 1259539200 1417305600 1575072000 1700000000);
 for i in {1..3}; do
-	nsalb=$ns[$i]
-	nsaub=$ns[$i+1]
+	nsalb=${ns[$i]}
+	nsaub=${ns[$i+1]}
 	for j in {1..3}; do
-		ncalb=$ncmt[$j]
-		ncaub=$ncmt[$j+1]
+		ncalb=${ncmt[$j]}
+		ncaub=${ncmt[$j+1]}
 		for k in {1..3}; do
-			nsblb=$ns[$k]
-			nsbub=$ns[$k+1]
+			nsblb=${ns[$k]}
+			nsbub=${ns[$k+1]}
 			for l in {1..3}; do
-				ncblb=$ncmt[$l]
-				ncbub=$ncmt[$l+1]
+				ncblb=${ncmt[$l]}
+				ncbub=${ncmt[$l+1]}
 				for m in {1..3}; do
-					dlb=$d[$m];
-					dub=$d[$m+1];
+					dlb=${d[$m];}
+					dub=${d[$m+1];}
 					for n in {1..4}; do
-						crlb=$cr[$n];
-						crub=$cr[$n+1];
+						crlb=${cr[$n]};
+						crub=${cr[$n+1]};
 						count=$(
 							cat data/annoteStats/rand0 |
 							awk -F\; -v nsalb=$nsalb -v nsaub=$nsaub -v ncalb=$ncalb -v ncaub=$ncaub \
@@ -141,16 +145,24 @@ awk -F\; '{if ($18>10 && $22>100) {print $0";1"} else if ($18==0 && $22<10) {pri
 > tmp;
 rm data/annoteStats/rand0;
 mv tmp data/annoteStats/rand0;
+for i in {0,1}; do
+	zcat "/da5_data/basemaps/gz/annote$i.gz" |
+	awk -F\; '{if ($4>10 && $8>100) {print $0";1"} else if ($4==0 && $8<10) {print $0";3"} else {print $0";2"} }' |
+	awk -F\; '{if ($18>10 && $22>100) {print $0";1"} else if ($18==0 && $22<10) {print $0";3"} else {print $0";2"} }' \
+	> "data/annoteStats/copies.$i";
+done;
+mv data/annoteStats/rand0 data/annoteStats/copies.rand;
 # building contingency table
-cat data/annoteStats/rand0 |
-awk -F\; '{
-	if ($12<1) {k=1} else if ($12<3) {k=2} else {k=3};
-	if ($10<1259539200) {l=1} else if ($10<1417305600) {l=2} else if ($10<1575072000) {l=3} else {l=4};
-	print "a"$24";b"$25";d"k";cr"l}' |
-~/lookup/lsort 100G |
-uniq -c |
-awk '{print $2";"$1}' \
-> data/annoteStats/contingency.rand;
+for i in {0,1,rand}; do
+	awk -F\; '{
+		if ($12<1) {k=1} else if ($12<3) {k=2} else {k=3};
+		if ($10<1259539200) {l=1} else if ($10<1417305600) {l=2} else if ($10<1575072000) {l=3} else {l=4};
+		print "a"$24";b"$25";d"k";cr"l}' <"data/annoteStats/copies.$i" |
+	~/lookup/lsort 100G |
+	uniq -c |
+	awk '{print $2";"$1}' \
+	> "data/annoteStats/contingency.$i";
+done;
 # adding combinations with 0 count
 for i in {1..3}; do
 	for j in {1..3}; do
