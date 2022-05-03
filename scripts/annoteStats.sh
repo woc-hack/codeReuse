@@ -26,7 +26,7 @@ for i in {2,3,4,7,8,9,13,14,16,17,18,21,22,23}; do
 	join -1 2 -2 2 -a1 -a2 \
 		<(cat data/annoteStats/split/$i.0.hist | ~/lookup/lsort 10G -k2,2) \
 		<(cat data/annoteStats/split/$i.1.hist | ~/lookup/lsort 10G -k2,2) |
-	recJoin $(for j in {2..31};do echo "data/annoteStats/split/$i.$j.hist";done) |
+	recJoin "$(for j in {2..31};do echo "data/annoteStats/split/$i.$j.hist";done)" |
 	awk '{sum=0;for(i=2; i<=NF; i++) {sum+=$i} print $1";"sum}' | 
 	~/lookup/lsort 10G -t\; -k1,1 -n > data/annoteStats/$i.hist;
 done
@@ -174,13 +174,15 @@ for i in {1..3}; do
 	done;
 done | 
 sort > tmp;
-join -a1 \
-	tmp \
-	<(cat data/annoteStats/contingency.rand | sed 's|;\([0-9]*$\)| \1|') |
-awk '{if (NF == 2) {print $1";"$2} else {print $1";"0}}' \
-> tmp2;
-rm tmp data/annoteStats/contingency.rand;
-mv tmp2 data/annoteStats/contingency.rand;
+for f in {0,1,rand}; do
+	join -a1 \
+		tmp \
+		<(sed 's|;\([0-9]*$\)| \1|' <"data/annoteStats/contingency.$f") |
+	awk '{if (NF == 2) {print $1";"$2} else {print $1";"0}}' \
+	> "tmp.$f";
+	mv "tmp.$f" "data/annoteStats/contingency.$f";
+done;
+rm tmp;
 
 # rand uniq blobs
 cat data/annoteStats/rand0 |

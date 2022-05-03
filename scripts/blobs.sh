@@ -174,7 +174,7 @@ for i in {0..1}; do
     > ../data/blobs/blobs.$i;
 done;
 
-# if implements variable
+# if defines variable
 for i in {0,1,rand}; do
     for j in {0..127}; do
         LC_ALL=C LANG=C join -t\; \
