@@ -86,6 +86,21 @@ for j in {0..1}; do
 	echo "";
 done >> ../data/annoteStats/stat;
 
+# general stats
+for i in {1,11,15}; do
+	echo "column $i unique count:";
+	for j in {0..31}; do
+			zcat "/da5_data/basemaps/gz/annote$j.gz" |
+			cut -d\; -f"$i" |
+			uniq |
+			~/lookup/lsort 50G | 
+			uniq;
+	done |
+	~/lookup/lsort 100G |
+	uniq |
+	wc -l;
+done >> data/annoteStats/stat;
+
 # random samples
 for i in {0..31}; do
 	shuf -n 20000000 <(zcat /da5_data/basemaps/gz/annote$i.gz);
