@@ -3,6 +3,7 @@
 ver=U;
 s=14;
 
+#not used, P2fb is not a good place to start!
 #project sample
 zcat /da?_data/basemaps/gz/P2fbFull${ver}$s.s |
 cut -d\; -f2 |
@@ -49,3 +50,27 @@ perl -e '$pb="";
     }
 ' <data/projects/b2tP${ver}$s.s \
 >data/projects/b2tP${ver}$s.times ;
+
+#sampling projects
+##project_sample.py
+#parsing mongo file
+##$p;$ncmt;$nblob;$na;$ncore;$nmc;$nf;$cs;$nfr;$gm;$gf;$et;$lt
+jq -c '.[]' data/projects/sample.mongo |
+while read -r obj; do
+    p=$(echo "$obj" | jq .ProjectID | cut -d\" -f2);
+    ncmt=$(echo "$obj" | jq .NumCommits);
+    nblob=$(echo "$obj" | jq .NumBlobs);
+    na=$(echo "$obj" | jq .NumAuthors);
+    ncore=$(echo "$obj" | jq .NumCore);
+    nmc=$(echo "$obj" | jq .NumActiveMon);
+    nf=$(echo "$obj" | jq .NumFiles);
+    cs=$(echo "$obj" | jq .CommunitySize);
+    nfr=$(echo "$obj" | jq .NumForks);
+    gm=$(echo "$obj" | jq .Gender.male);
+    gf=$(echo "$obj" | jq .Gender.female);
+    et=$(echo "$obj" | jq .EarliestCommitDate);
+    lt=$(echo "$obj" | jq .LatestCommitDate);
+    echo "$p;$ncmt;$nblob;$na;$ncore;$nmc;$nf;$cs;$nfr;$gm;$gf;$et;$lt";
+done |
+~/lookup/lsort 20G -t\; -k1,1 \
+>data/projects/sample.s;
