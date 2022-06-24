@@ -74,3 +74,28 @@ while read -r obj; do
 done |
 ~/lookup/lsort 20G -t\; -k1,1 \
 >data/projects/sample.s;
+#slurm
+ver=U;
+##copied blobs Full
+dir="/nfs/home/audris/work/c2fb/";
+for i in {0..127}; do 
+    zcat ${dir}b2tPFull${ver}$i.s |
+    cut -d\; -f1,3 |
+    uniq |
+    LC_ALL=C LANG=C sort -T. -u |
+    cut -d\; -f1 |
+    uniq -d |
+    gzip >data/b2tPFull${ver}$i.copied;
+done;
+##not copied Full
+for i in {0..127}; do 
+    LC_ALL=C LANG=C join -t\; -v1 \
+        <(zcat ${dir}b2tPFull${ver}$i.s | cut -d\; -f1,3) \
+        <(zcat data/b2tPFull${ver}$i.copied) |
+    uniq |
+    gzip >data/notCopiedb2PFull${ver}$i.s;
+    zcat data/notCopiedb2PFull${ver}$i.s |
+    awk -F\; '{print $2";"$1}' |
+    LC_ALL=C LANG=C sort -T. -t\; -k1,1 |
+    gzip >data/P2notCopiedbFull${ver}$i.s;
+done;
