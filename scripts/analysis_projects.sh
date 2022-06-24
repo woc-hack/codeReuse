@@ -72,8 +72,17 @@ while read -r obj; do
     lt=$(echo "$obj" | jq .LatestCommitDate);
     echo "$p;$ncmt;$nblob;$na;$ncore;$nmc;$nf;$cs;$nfr;$gm;$gf;$et;$lt";
 done |
+awk -F\; '{if ($1!="" && $2!="null") print}' |
 ~/lookup/lsort 20G -t\; -k1,1 \
 >data/projects/sample.s;
+#copied blobs
+for i in {0..31}; do
+    LC_ALL=C LANG=C join -t\; \
+        <(cut -d\; -f1 <data/projects/sample.s) \
+        <(zcat /da?_data/basemaps/gz/P2fbFull${ver}"$i".s) 
+done |
+~/lookup/lsort 20G -t\; -k1,1 |
+gzip >data/projects/sample.P2fb.s;
 #slurm
 ver=U;
 ##copied blobs Full
