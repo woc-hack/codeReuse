@@ -154,4 +154,18 @@ perl -e '$pb="";
         $pb=$bl;
         $tmp{$p}=$t if !defined $tmp{$p} || $tmp{$p} > $t;
     }' | 
-gzip >data/sample.b2tP.times ;
+gzip >data/sample.b2tP.times;
+#1-2 year
+#b2tPc
+zcat data/sample.b2tP.times |
+awk -F\; '{if (NF>3) {print $0";"1} else {print $0";"0}}' |
+gzip >data/sample.b2tPc.0y;
+i=1;
+for d in {31536000,63072000}; do
+    zcat data/sample.b2tP.times |
+    awk -F\; -v d="$d" '{l=$3+d;for (i=NF; i>=3; i=i-2) {if($i<=l) {b=i; break}}; 
+        for (j=1; j<=b; ++j) {printf $j";";} print ""}' |
+    awk -F\; '{if (NF>4) {print $0 1} else {print $0 0}}' |
+    gzip >data/sample.b2tPc.${i}y;
+    i=2;
+done;
