@@ -108,3 +108,50 @@ for i in {0..127}; do
     LC_ALL=C LANG=C sort -T. -t\; -k1,1 |
     gzip >data/P2notCopiedbFull${ver}$i.s;
 done;
+#join with sample projects
+for i in {0..127}; do 
+    LC_ALL=C LANG=C join -t\; \
+        <(cut -d\; -f1 <data/sample.s) \
+        <(zcat data/P2notCopiedbFull${ver}$i.s)
+done |
+LC_ALL=C LANG=C sort -T. -t\; -k1,1 |
+gzip >data/sample.P2notCopiedb.s;
+#geting all the sample blobs
+for file in {P2fb,P2notCopiedb}; do
+    zcat data/sample.${file}.s 
+done |
+LC_ALL=C LANG=C sort -T. -t\; -k1,1 |
+gzip >data/sample.P2b.s;
+zcat data/sample.P2b.s |
+awk -F\; '{print $2";"$1}' |
+LC_ALL=C LANG=C sort -T. -t\; -k1,1 |
+gzip >data/sample.b2P.s;
+zcat data/sample.b2P.s |
+cut -d\; -f1 |
+gzip >data/sample.blobs.s;
+#joining with b2tP
+dir="/nfs/home/audris/work/c2fb/";
+for i in {0..127}; do
+    LC_ALL=C LANG=C join -t\; \
+        <(zcat data/sample.blobs.s) \
+        <(zcat ${dir}b2tPFull${ver}$i.s)
+done |
+LC_ALL=C LANG=C sort -T. -t\; -k1,1 |
+gzip >data/sample.b2tP.s;
+#creating times
+zcat data/sample.b2tP.s | 
+perl -e '$pb="";
+    while(<STDIN>){
+        chop();
+        ($bl,$t,$p)=split(/;/);
+        if($bl ne $pb && $pb ne ""){
+            print "$pb";
+            for $pp (sort {$tmp{$a} <=> $tmp{$b} } keys %tmp){
+                print ";$pp;$tmp{$pp}"
+            }%tmp=();
+            print "\n"
+        };
+        $pb=$bl;
+        $tmp{$p}=$t if !defined $tmp{$p} || $tmp{$p} > $t;
+    }' | 
+gzip >data/sample.b2tP.times ;
