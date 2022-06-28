@@ -172,7 +172,7 @@ done;
 #b2sl
 dir="/nfs/home/audris/work/All.blobs/";
 for i in {0..127}; do
-    LC_ALL=C LANG=C join -t\; \
+    LC_ALL=C LANG=C join -t\; -a1 -o auto -e null \
         <(zcat data/sample.blobs.s) \
         <(zcat ${dir}b2slfclFull${ver}$i.s | cut -d\; -f1-3) 
 done |
@@ -180,7 +180,7 @@ LC_ALL=C LANG=C sort -T. -t\; -k1,1 |
 gzip >data/sample.b2sl.s;
 #b2slPtc
 for i in {0..2}; do
-    LC_ALL=C LANG=C join -t\; -a2 -o auto -e null \
+    LC_ALL=C LANG=C join -t\; \
         <(zcat data/sample.b2sl.s) \
         <(zcat data/sample.b2Ptc.${i}y) |
     gzip >data/sample.b2slPtc.${i}y;
