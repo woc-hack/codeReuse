@@ -50,7 +50,7 @@ for i in {0..0}; do
                 %tmp=();
                 %tmpl=();
             };
-            if (!$tmp{c}){
+            if (!defined $tmp{c}){
                 $tmp{c}=0;
                 $tmp{cc}=0;
                 $tmp{bc}=0;
