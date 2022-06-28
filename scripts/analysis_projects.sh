@@ -156,16 +156,32 @@ perl -e '$pb="";
     }' | 
 gzip >data/sample.b2tP.times;
 #1-2 year
-#b2tPc
+#b2Ptc
 zcat data/sample.b2tP.times |
 awk -F\; '{if (NF>3) {print $0";"1} else {print $0";"0}}' |
-gzip >data/sample.b2tPc.0y;
+gzip >data/sample.b2Ptc.0y;
 i=1;
 for d in {31536000,63072000}; do
     zcat data/sample.b2tP.times |
     awk -F\; -v d="$d" '{l=$3+d;for (i=NF; i>=3; i=i-2) {if($i<=l) {b=i; break}}; 
         for (j=1; j<=b; ++j) {printf $j";";} print ""}' |
     awk -F\; '{if (NF>4) {print $0 1} else {print $0 0}}' |
-    gzip >data/sample.b2tPc.${i}y;
+    gzip >data/sample.b2Ptc.${i}y;
     i=2;
+done;
+#b2sl
+dir="/nfs/home/audris/work/All.blobs/";
+for i in {0..127}; do
+    LC_ALL=C LANG=C join -t\; \
+        <(zcat data/sample.blobs.s) \
+        <(zcat ${dir}b2slfclFull${ver}$i.s | cut -d\; -f1-3) 
+done |
+LC_ALL=C LANG=C sort -T. -t\; -k1,1 |
+gzip >data/sample.b2sl.s;
+#b2slPtc
+for i in {0..2}; do
+    LC_ALL=C LANG=C join -t\; -a2 -o auto -e null \
+        <(zcat data/sample.b2sl.s) \
+        <(zcat data/sample.b2Ptc.${i}y) |
+    gzip >data/sample.b2slPtc.${i}y;
 done;
