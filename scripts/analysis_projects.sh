@@ -162,13 +162,16 @@ zcat data/sample.b2tP.times |
 awk -F\; '{if (NF>3) {print $0";"1} else {print $0";"0}}' |
 gzip >data/sample.b2Ptc.0y;
 i=1;
+bound=1619874000;
 for d in {31536000,63072000}; do
     zcat data/sample.b2tP.times |
     awk -F\; -v d="$d" '{l=$3+d;for (i=NF; i>=3; i=i-2) {if($i<=l) {b=i; break}}; 
         for (j=1; j<=b; ++j) {printf $j";";} print ""}' |
     awk -F\; '{if (NF>4) {print $0 1} else {print $0 0}}' |
+    awk -F\; -v bound="$bound" '{if ($3<bound) print}' |
     gzip >data/sample.b2Ptc.${i}y;
     i=2;
+    bound=1588338000;
 done;
 #b2sl
 dir="/nfs/home/audris/work/All.blobs/";
