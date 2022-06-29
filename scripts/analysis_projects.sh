@@ -1,9 +1,9 @@
 #!/usr/bin/bash
 
+#------------------------------------------------------------------------------------
+#!!!not used, P2fb is not a good place to start!!!
 ver=U;
 s=14;
-
-#not used, P2fb is not a good place to start!
 #project sample
 zcat /da?_data/basemaps/gz/P2fbFull${ver}$s.s |
 cut -d\; -f2 |
@@ -50,6 +50,7 @@ perl -e '$pb="";
     }
 ' <data/projects/b2tP${ver}$s.s \
 >data/projects/b2tP${ver}$s.times ;
+#------------------------------------------------------------------------------------
 
 #sampling projects
 ##project_sample.py
@@ -248,4 +249,13 @@ for i in {0..2}; do
             $tmp{et}=$t if (!defined $tmp{et} || $tmp{et} > $t);
     }' |
     gzip >data/sample.P2summ.${i}y;
+done;
+#P2all
+#1$p;2$ncmt;3$nblob;4$na;5$ncore;6$nmc;7$nf;8$cs;9$nfr;10$gm;11$gf;12$et;13$lt
+#14$l;15$c;16$cc;17$bc;18$bcc;19$ad;20$as;21$acs;22$ebt
+for i in {0..2}; do
+    LC_ALL=C LANG=C join -t\; \
+        data/projects/sample.s \
+        <(zcat "data/projects/sample.P2summ.${i}y") \
+    > "data/projects/sample.P2all.${i}y";
 done;
