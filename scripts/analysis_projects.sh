@@ -76,6 +76,16 @@ done |
 awk -F\; '{if ($1!="" && $2!="null") print}' |
 ~/lookup/lsort 20G -t\; -k1,1 \
 >data/projects/sample.s;
+#adding number of stars
+jq '.[] | "\(.ProjectID);\(.NumStars)"' data/projects/sample.mongo >tmpStars;
+LC_ALL=C LANG=C join -t\; \
+    data/projects/sample.s \
+    <(cut -d\" -f2 <tmpStars | 
+        awk -F\; '{if (NF==2) print}' |
+        ~/lookup/lsort 20G -t\; -k1,1) \
+>tmp;
+rm tmpStars;
+mv tmp data/projects/sample.s;
 #copied blobs
 for i in {0..31}; do
     LC_ALL=C LANG=C join -t\; \
@@ -251,8 +261,8 @@ for i in {0..2}; do
     gzip >data/sample.P2summ.${i}y;
 done;
 #P2all
-#1$p;2$ncmt;3$nblob;4$na;5$ncore;6$nmc;7$nf;8$cs;9$nfr;10$gm;11$gf;12$et;13$lt
-#14$l;15$c;16$cc;17$bc;18$bcc;19$ad;20$as;21$acs;22$ebt
+#1$p;2$ncmt;3$nblob;4$na;5$ncore;6$nmc;7$nf;8$cs;9$nfr;10$gm;11$gf;12$et;13$lt;14$ns
+#15$l;16$nb;17$cc;18$bc;19$bcc;20$ad;21$as;22$acs;23$ebt
 for i in {0..2}; do
     LC_ALL=C LANG=C join -t\; \
         data/projects/sample.s \
