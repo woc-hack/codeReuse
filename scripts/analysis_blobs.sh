@@ -90,6 +90,8 @@ for d in {0,1,2}; do
 done;
 
 #slurm
+ver=U;
+s=14;
 dir="/nfs/home/audris/work/c2fb/";
 zcat ${dir}b2tPFull${ver}$s.s | 
 cut  -d\; -f1 |
@@ -137,7 +139,7 @@ dir="/nfs/home/audris/work/All.blobs/";
 for i in {0..127}; do
     LC_ALL=C LANG=C join -t\; \
         <(zcat data/bsample.blobs.s) \
-        <(zcat ${dir}b2slfclFull${ver}$i.s | cut -d\; -f1-3) 
+        <(zcat "${dir}b2slfclFull${ver}$i.s" | cut -d\; -f1-3) 
 done |
 LC_ALL=C LANG=C sort -T. -t\; -k1,1 |
 gzip >data/bsample.b2sl.s &&
@@ -152,14 +154,22 @@ echo "finished b2sl";
 for i in {0..2}; do
     LC_ALL=C LANG=C join -t\; \
         <(zcat data/bsample.b2sl.s) \
-        <(zcat data/bsample.b2Ptc.${i}y) |
-    gzip >data/bsample.b2slPtc.${i}y &&
+        <(zcat "data/bsample.b2Ptc.${i}y") |
+    gzip >"data/bsample.b2slPtc.${i}y" &&
     echo "finished b2slPtc $i";
 done;
 #b2sltcd
 for i in {0..2}; do
-    zcat data/bsample.b2slPtc.${i}y |
+    zcat "data/bsample.b2slPtc.${i}y" |
     awk -F\; '{OFS=";"; print $1,$2,$3,$5,$NF,(NF-6)/2}' |
-    gzip >data/bsample.b2sltcd.${i}y &&
+    gzip >"data/bsample.b2sltcd.${i}y" &&
     echo "finished b2sltcd $i";
+done;
+#sltcd
+#$size;$language;$time;$copied;$downstream
+for i in {0..2}; do
+    zcat "data/blobs/bsample.b2sltcd.${i}y" |
+    awk -F\; '{OFS=";"; print $2,$3,$4,$5,$6}' \
+    >"data/blobs/bsample.sltcd.${i}y" &&
+    echo "finished sltcd $i";
 done;
