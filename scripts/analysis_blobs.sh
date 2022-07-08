@@ -173,3 +173,22 @@ for i in {0..2}; do
     >"data/blobs/bsample.sltcd.${i}y" &&
     echo "finished sltcd $i";
 done;
+
+# size to LOC
+zcat data/blobs/b2tPFullU14.copied | 
+while read -r b; do 
+    echo "$b;$(echo "$b" | ~/lookup/showCnt blob 2>/dev/null | wc -l)"; 
+done >data/blobs/bsample.b2loc.s;
+LC_ALL=C LANG=C join -t\; \
+    data/blobs/bsample.b2loc.s \
+    <(zcat data/blobs/bsample.b2sltcd.0y | cut -d\; -f1-3) \
+>data/blobs/bsample.b2locsl;
+
+# b2nb (ob2b) (probably just 14 is relavent!)
+for i in {0..127}; do
+    LC_ALL=C LANG=C join -t\; \
+        <(zcat data/blobs/b2tPFullU14.copied) \
+        <(zcat /da?_data/basemaps/gz/ob2bFullU"$i".s)
+done |
+~/lookup/lsort 50G -t\; |
+gzip >data/blobs/bsample.copiedb2nb.s
