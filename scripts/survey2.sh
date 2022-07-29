@@ -117,7 +117,7 @@ LC_ALL=C LANG=C join -t\; \
     <(~/lookup/lsort 50G -t\; -k1,1 <Rtmp) |
 gzip >data/survey/second/can.2.ks;
 # filtering user emails
-# A2a -> 127691
+# A2e -> 127691
 zcat data/survey/second/can.2.ks | 
 cut -d\; -f5 | 
 ~/lookup/lsort 50G -u | 
@@ -138,4 +138,31 @@ while read -r email; do
         "https://api.github.com/search/users?q=${email}" |
         jq .total_count)"
 done |
+~/lookup/lsort 10G -t\; -k1,1 -u |
 gzip >data/survey/second/can.e2v.s;
+# A2ev -> 127690
+LC_ALL=C LANG=C join -t\; -1 2 \
+    <(zcat data/survey/second/can.A2e.s | ~/lookup/lsort 50G -t\; -k2,2) \
+    <(zcat data/survey/second/can.e2v.s) |
+awk -F\; '{print $2";"$1";"$3}' |
+~/lookup/lsort 10G -t\; -k1,1 -u |
+gzip >data/survey/second/can.A2ev.s;
+# can 3 -> 654876
+# 1$k;2$b;3$f;4$t;5$uA;6$uc;7$uP;8$dP;9$d;10$s;11$ue
+LC_ALL=C LANG=C join -t\; -1 5 \
+    <(zcat data/survey/second/can.2.ks |
+        ~/lookup/lsort 10G -t\; -k5,5) \
+    <(zcat data/survey/second/can.A2ev.s |
+        awk -F\; '{if ($3==1) print}') |
+awk -F\; '{print $2";"$3";"$4";"$5";"$1";"$6";"$7";"$8";"$9";"$10";"$11}' |
+gzip >data/survey/second/can.3.As;
+# reducing and stratifying sample 
+zcat data/survey/second/can.3.As |
+cut -d\; -f1,3,4,7,9,10,11 >Rtmp;
+# survey2.ipynb
+# can 4 -> 65260
+LC_ALL=C LANG=C join -t\; \
+    <(zcat data/survey/second/can.3.As |
+        ~/lookup/lsort 10G -t\; -k1,1) \
+    <(~/lookup/lsort <Rtmp) |
+gzip >data/survey/second/can.4.ks;
