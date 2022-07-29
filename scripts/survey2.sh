@@ -85,8 +85,8 @@ gzip >data/survey/second/can.b2ftAc.s;
 # b2ft
 zcat data/survey/second/can.b2ftAc.s |
 cut -d\; -f1-3 |
-awk -F\; '{if ($2!="") print}' \
->data/survey/second/can.b2ft.s;
+awk -F\; '{if ($2!="") print}' |
+gzip >data/survey/second/can.b2ft.s;
 # survey2.ipynb
 # f -> f>10000 , t -> 10 bins
 #b2ftAc.2 -> 1356243
@@ -166,3 +166,44 @@ LC_ALL=C LANG=C join -t\; \
         ~/lookup/lsort 10G -t\; -k1,1) \
     <(~/lookup/lsort <Rtmp) |
 gzip >data/survey/second/can.4.ks;
+# adding time and removing stratify vars
+# 1$b;2$t;3$uA;4$uc;5$uP;6$dP;7$ue
+LC_ALL=C LANG=C join -t\; \
+    <(zcat data/survey/second/can.b2ftAc.s | 
+        cut -d\; -f1,3 |
+        ~/lookup/lsort 10G -t\; -k1,1 -u) \
+    <(zcat data/survey/second/can.4.ks |
+        cut -d\; -f2,5,6,7,8,11 |
+        ~/lookup/lsort 10G -t\; -k1,1 -u) |
+gzip >data/survey/second/can.5.bs;
+    
+# upstream table
+zcat data/survey/second/can.5.bs |
+perl -e 'while(my $l=<STDIN>){$n=$n+1;print "$n;$l"}' >tmp;
+cut -d\; -f1,8 <tmp >Rtmp;
+# survey2.ipynb
+echo "name,email,blob,upstream_url,udate,ucommit,ufile" \
+>data/survey/second/can_up.csv;
+LC_ALL=C LANG=C join -t\; \
+    <(~/lookup/lsort 10G -t\; -k1,1 <tmp) \
+    <(~/lookup/lsort <Rtmp) |
+cut -d\; -f2-6,8 |
+while read -r line; do
+    name=$(echo "$line" |
+        cut -d\; -f3 |
+        sed 's|<[^<>]*>$||;s|,|-|g');
+    email=$(echo "$line" | cut -d\; -f6);
+    blob=$(echo "$line" | cut -d\; -f1);
+    up_url=$(echo "$line" |
+        cut -d\; -f5 |
+        sed 's|_|/|;s|^|https://github.com/|');
+    t=$(echo "$line" | cut -d\; -f2);
+    udate=$(date -d @"$t" | awk '{print $2" "$3" "$6}');
+    ucommit=$(echo "$line" | cut -d\; -f4);
+    ufile=$(echo "$ucommit" | 
+        ~/lookup/cmputeDiff3.perl 2>/dev/null |
+        grep "$blob" |
+        head -1 |
+        cut -d\; -f2);
+    echo "$name,$email,$blob,$up_url,$udate,$ucommit,$ufile"
+done >> data/survey/second/can_up.csv;
