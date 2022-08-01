@@ -204,6 +204,124 @@ while read -r line; do
         ~/lookup/cmputeDiff3.perl 2>/dev/null |
         grep "$blob" |
         head -1 |
-        cut -d\; -f2);
+        cut -d\; -f2 |
+        sed 's|,|-|g');
     echo "$name,$email,$blob,$up_url,$udate,$ucommit,$ufile"
 done >> data/survey/second/can_up.csv;
+shuf -n 2900 data/survey/second/can_up.csv >tmp;
+mv tmp data/survey/second/can_up.csv;
+
+# downstream commit/author
+# k;dc;dt;dA
+zcat data/survey/second/can.4.ks |
+cut -d\; -f1,2,8 |
+while read -r l; do
+    k=$(echo "$l" | cut -d\; -f1);
+    b=$(echo "$l" | cut -d\; -f2);
+    p=$(echo "$l" | cut -d\; -f3);
+    echo "$k;$(echo "$b" |
+        ~/lookup/getValues -f b2c |
+        cut -d\; -f2 |
+        ~/lookup/getValues c2P |
+        grep ";$p$" |
+        cut -d\; -f1 |
+        ~/lookup/getValues c2dat |
+        sort -t\; -nk2,2 | 
+        head -1 |
+        cut -d\; -f1,2,4)";
+done |
+gzip >data/survey/second/can.4.downData;
+# d.A2e -> 48529
+zcat data/survey/second/can.4.downData |
+cut -d\; -f4 |
+~/lookup/lsort 50G -u | 
+while read -r a; do
+    echo "$a;$(echo "$a" | sed 's|.*<||;s|>$||')"
+done |
+awk -F\; '{if ($2!="") print}' |
+gzip >data/survey/second/can.d.A2e.s;
+# github api
+zcat data/survey/second/can.d.A2e.s | 
+cut -d\; -f2 |
+while read -r email; do
+    ((c++));
+    l=$((c%10+1));
+    echo "$email;$(curl -s \
+        -H "Accept: application/vnd.github+json" \
+        -H "Authorization: token $(sed -n ${l}p ~/github_tokens)" \
+        "https://api.github.com/search/users?q=${email}" |
+        jq .total_count)"
+done |
+~/lookup/lsort 10G -t\; -k1,1 -u |
+gzip >data/survey/second/can.d.e2v.s;
+# dA2ev -> 127690
+LC_ALL=C LANG=C join -t\; -1 2 \
+    <(zcat data/survey/second/can.d.A2e.s | ~/lookup/lsort 50G -t\; -k2,2) \
+    <(zcat data/survey/second/can.d.e2v.s) |
+awk -F\; '{print $2";"$1";"$3}' |
+~/lookup/lsort 10G -t\; -k1,1 -u |
+gzip >data/survey/second/can.d.A2ev.s;
+# joining with down data
+LC_ALL=C LANG=C join -t\; -1 4 \
+    <(zcat data/survey/second/can.4.downData |
+        ~/lookup/lsort 10G -t\; -k4,4) \
+    <(zcat data/survey/second/can.d.A2ev.s |
+        awk -F\; '{if ($3==1) print $1";"$2}') |
+gzip >data/survey/second/can.d.A2kcte.s;
+# joining with can 4
+# 1$k;2$b;3$uc;4$uP;5$dP;6$dA;7$dc;8$dt;9$de
+LC_ALL=C LANG=C join -t\; -2 2 \
+    <(zcat data/survey/second/can.4.ks |
+        cut -d\; -f1,2,6,7,8) \
+    <(zcat data/survey/second/can.d.A2kcte.s |
+        ~/lookup/lsort 10G -t\; -k2,2 -u) |
+gzip >data/survey/second/can.d.5.ks;
+zcat data/survey/second/can.d.5.ks |
+cut -d\; -f1,9 >Rtmp;
+# survey2.ipynb
+# getting uc time
+LC_ALL=C LANG=C join -t\; -1 2 -2 2\
+    <(zcat data/survey/second/can.b2ftAc.s | 
+        cut -d\; -f3,5 |
+        ~/lookup/lsort 10G -t\; -k2,2 -u) \
+    <(zcat data/survey/second/can.d.5.ks |
+        cut -d\; -f1,3 |
+        ~/lookup/lsort 10G -t\; -k2,2 -u) |
+awk -F\; '{print $3";"$2}' >tmp;
+# 1$k;2$b;3$uc;4$uP;5$dP;6$dA;7$dc;8$dt;9$de;10$ut
+LC_ALL=C LANG=C join -t\; \
+    <(zcat data/survey/second/can.d.5.ks) \
+    <(~/lookup/lsort 10G -t\; -k1,1 -u <tmp) |
+gzip >data/survey/second/can.d.6.ks;
+# final tavle
+echo "name,email,blob,upstream_url,udate,ucommit,downstream_url,ddate,dcommit,dfile" \
+>data/survey/second/can_down.csv;
+LC_ALL=C LANG=C join -t\; \
+    <(zcat data/survey/second/can.d.6.ks) \
+    <(~/lookup/lsort <Rtmp) |
+while read -r line; do
+    name=$(echo "$line" |
+        cut -d\; -f6 |
+        sed 's|<[^<>]*>$||;s|,|-|g');
+    email=$(echo "$line" | cut -d\; -f9);
+    blob=$(echo "$line" | cut -d\; -f2);
+    up_url=$(echo "$line" |
+        cut -d\; -f4 |
+        sed 's|_|/|;s|^|https://github.com/|');
+    ut=$(echo "$line" | cut -d\; -f10);
+    udate=$(date -d @"$ut" | awk '{print $2" "$3" "$6}');
+    ucommit=$(echo "$line" | cut -d\; -f3);
+    dcommit=$(echo "$line" | cut -d\; -f7);
+    dfile=$(echo "$dcommit" | 
+        ~/lookup/cmputeDiff3.perl 2>/dev/null |
+        grep "$blob" |
+        head -1 |
+        cut -d\; -f2 |
+        sed 's|,|-|g');
+    dt=$(echo "$line" | cut -d\; -f8);
+    ddate=$(date -d @"$dt" | awk '{print $2" "$3" "$6}');
+    down_url=$(echo "$line" |
+        cut -d\; -f5 |
+        sed 's|_|/|;s|^|https://github.com/|');
+    echo "$name,$email,$blob,$up_url,$udate,$ucommit,$down_url,$ddate,$dcommit,$dfile"
+done >> data/survey/second/can_down.csv;
