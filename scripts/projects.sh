@@ -82,15 +82,21 @@ while read -r obj; do
     ncore=$(echo "$obj" | jq .NumCore);
     nmc=$(echo "$obj" | jq .NumActiveMon);
     echo "$p;$nmc;$nblob;$ncore;$ncmt;$na";
-done >data/projects/nPa.p;
+done |
+~/lookup/lsort 30G -t\; -k1,1 -u |
+awk -F\; '{if ($1!="") print}' |
+sed 's|$|;0|' \
+>data/projects/nPa.p
 ## getting stars
 LC_ALL=C LANG=C join -t\; \
     <(cut -d\; -f1 <data/projects/nPa.p | ~/lookup/lsort 30G) \
     <(zcat /da5_data/basemaps/gz/ght.P2w.cnt | ~/lookup/lsort 50G -t\; -k1,1) \
 >data/projects/nPs.p;
-## consolidating
-## P;nmc;nblob;ncore;ncmt;na;Ncopy
-cut -d\; -f4 --complement <data/projects/uP.p \
+LC_ALL=C LANG=C join -t\; -a1 -e"0" -o 1.1 1.2 1.3 2.2 1.4 1.5 1.6 1.7 \
+    <(~/lookup/lsort 30G -t\; -k1,1 -u <data/projects/nPa.p) \
+    data/projects/nPs.p \
 >data/projects/cP.p;
-sed 's|$|;0|' <data/projects/nPa.p \
+## consolidating
+## P;nmc;nblob;nsa;ncore;ncmt;na;Ncopy
+cat data/projects/uP.p \
 >>data/projects/cP.p;
