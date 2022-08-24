@@ -184,11 +184,49 @@ LC_ALL=C LANG=C join -t\; \
     <(zcat data/blobs/bsample.b2sltcd.0y | cut -d\; -f1-3) \
 >data/blobs/bsample.b2locsl;
 
-# b2nb (ob2b) (probably just 14 is relavent!)
+# copiedb2nb (ob2b) (probably just 14 is relavent!)
 for i in {0..127}; do
     LC_ALL=C LANG=C join -t\; \
         <(zcat data/blobs/b2tPFullU14.copied) \
         <(zcat /da?_data/basemaps/gz/ob2bFullU"$i".s)
 done |
 ~/lookup/lsort 50G -t\; |
-gzip >data/blobs/bsample.copiedb2nb.s
+gzip >data/blobs/bsample.copiedb2nb.s;
+# copiedb2P
+zcat data/blobs/bsample.b2Pt.times | 
+awk -F\; '{if (NF>3) {print $1";"$2}}' |
+gzip >data/blobs/bsample.copiedb2P.s;
+# nb2P
+zcat data/blobs/bsample.copiedb2nb.s |
+cut -d\; -f2 | 
+~/lookup/lsort 50G |
+gzip >data/blobs/bsample.nb.s;
+for i in {0..31}; do
+    LC_ALL=C LANG=C join -t\; \
+        <(zcat data/blobs/bsample.nb.s) \
+        <(zcat /da?_data/basemaps/gz/b2PFullU"$i".s)
+done |
+~/lookup/lsort 50G -t\; -u |
+gzip >data/blobs/bsample.nb2P.s
+# copiedb2nbP
+LC_ALL=C LANG=C join -t\; \
+    <(zcat data/blobs/bsample.copiedb2nb.s) \
+    <(zcat data/blobs/bsample.copiedb2P.s) |
+~/lookup/lsort 50G -t\; -k2,2 |
+gzip >data/blobs/bsample.copiedb2nbP.nbs;
+# nb2copiedbPP
+LC_ALL=C LANG=C join -t\; -1 2 \
+    <(zcat data/blobs/bsample.copiedb2nbP.nbs) \
+    <(zcat data/blobs/bsample.nb2P.s) |
+gzip >data/blobs/bsample.nb2copiedbPP.s;
+
+#delays distribution
+zcat data/blobs/bsample.b2Pt.times |
+awk -F\; '{if (NF>3) print}' |
+awk -F\; '{printf $1";"$3";"; for (i=5; i<=NF; i=i+2) {printf $i-$3";";} print ""}' |
+sed 's|;$||' |
+gzip > data/blobs/bsample.copiedb2td.0y;
+zcat data/blobs/bsample.copiedb2td.0y |
+awk -F\; '{if ($2!=0) print}' |
+cut -d\; --complement -f1,2 |
+sed 's|;|\n|g' >data/blobs/bsample.delays;
