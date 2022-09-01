@@ -325,3 +325,21 @@ while read -r line; do
         sed 's|_|/|;s|^|https://github.com/|');
     echo "$name,$email,$blob,$up_url,$udate,$ucommit,$down_url,$ddate,$dcommit,$dfile"
 done >> data/survey/second/can_down.csv;
+
+# checking same authors
+LC_ALL=C LANG=C join -t\; -2 2 \
+    <(zcat data/survey/second/can.4.ks |
+        cut -d\; -f1,2,5,6,7,8,11) \
+    <(zcat data/survey/second/can.d.A2kcte.s |
+        ~/lookup/lsort 10G -t\; -k2,2 -u) >tmp;
+cut -d\; -f3,8 <tmp >a1a2; # n 14442 ; $1==$2 1593
+cut -d\; -f2 <na1a2 | ~/lookup/getValues a2A >a1A1;
+cut -d\; -f3 <na1a2 | ~/lookup/getValues a2A >a2A2;
+LC_ALL=C LANG=C join -t\; \
+    <(~/lookup/lsort 10G -t\; -k1 <a1a2) \
+    <(~/lookup/lsort 10G -t\; -k1 -u <a1A1) |
+awk -F\; '{print $3";"$2}'>A1a2;
+LC_ALL=C LANG=C join -t\; -1 2 \
+    <(~/lookup/lsort 10G -t\; -k2 <A1a2) \
+    <(~/lookup/lsort 10G -t\; -k1 -u <a2A2) |
+awk -F\; '{print $2";"$3}'>A1A2; # $1==$2 4243
