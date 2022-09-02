@@ -4,7 +4,7 @@ ver=U;
 i=14;
 
 #copied blobs
-dir="/nics/b/home/audris/work/c2fb/";
+dir="/nics/b/home/*****/work/c2fb/";
 zcat ${dir}b2tPFull${ver}$i.s | 
 cut -d\; -f1,3 | 
 uniq | 
@@ -13,7 +13,7 @@ cut -d\; -f1 |
 uniq -d | 
 gzip > data/blobs/b2tPFull${ver}$i.copied;
 #b2slfcl
-dir="/nics/b/home/audris/work/All.blobs/";
+dir="/nics/b/home/*****/work/All.blobs/";
 zcat ${dir}b2slfclFull${ver}$i.s | 
 join -t\; - <(zcat data/blobs/b2tPFull${ver}$i.copied) | 
 gzip > data/blobs/b2tPFull${ver}$i.copiedSize;
@@ -23,7 +23,7 @@ gzip > data/blobs/b2tPFull${ver}$i.notCopiedSize;
 
 #creation time
 #b2tPc
-dir="/nics/b/home/audris/work/c2fb/";
+dir="/nics/b/home/*****/work/c2fb/";
 zcat ${dir}b2tPFull${ver}$i.s | 
 perl -e '$pb="";
     while(<STDIN>){
@@ -37,15 +37,15 @@ join -t\; -a1 - <(zcat data/blobs/b2tPFull${ver}$i.copied | awk '{print $1";1"}'
 awk -F\; '{if (NF==3) print $0";0"; else print $0}' | 
 gzip > data/blobs/b2tPFull${ver}$i.FirstCopied;
 #b2tPcslfcl
-dir="/nics/b/home/audris/work/All.blobs/"
+dir="/nics/b/home/*****/work/All.blobs/"
 zcat data/blobs/b2tPFull${ver}$i.FirstCopied | 
 join -t\; - <(zcat ${dir}b2slfclFull${ver}$i.s) | 
-gzip > /lustre/haven/user/mjahansh/b2tPFull${ver}$i.FirstCopiedSize;
+gzip > /lustre/haven/user/*****/b2tPFull${ver}$i.FirstCopiedSize;
 #transfer
 tar -cf - \
-    /lustre/haven/user/mjahansh/b2tPFull${ver}$i.FirstCopiedSize \
+    /lustre/haven/user/*****/b2tPFull${ver}$i.FirstCopiedSize \
     data/blobs/b2tPFull${ver}$i.FirstCopied |
-gzip -c | ssh -p 443 mjahansh@da4.eecs.utk.edu tar -xzf -
+gzip -c | ssh -p 443 *****@da4.eecs.utk.edu tar -xzf -
 
 #times
 zcat b2tPFull${ver}$i.s | 
@@ -92,13 +92,13 @@ done;
 #slurm
 ver=U;
 s=14;
-dir="/nfs/home/audris/work/c2fb/";
+dir="/nfs/home/*****/work/c2fb/";
 zcat ${dir}b2tPFull${ver}$s.s | 
 cut  -d\; -f1 |
 uniq |
 gzip >data/bsample.blobs.s;
 #times
-dir="/nfs/home/audris/work/c2fb/";
+dir="/nfs/home/*****/work/c2fb/";
 zcat ${dir}b2tPFull${ver}$s.s | 
 perl -e '$pb="";
     while(<STDIN>){
@@ -135,7 +135,7 @@ for d in {31536000,63072000}; do
     bound=1588338000;
 done;
 #b2sl
-dir="/nfs/home/audris/work/All.blobs/";
+dir="/nfs/home/*****/work/All.blobs/";
 for i in {0..127}; do
     LC_ALL=C LANG=C join -t\; \
         <(zcat data/bsample.blobs.s) \

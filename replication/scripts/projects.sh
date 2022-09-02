@@ -45,7 +45,7 @@ gzip >data/projects/sample.P2fb.s;
 #slurm
 ver=U;
 ##copied blobs Full
-dir="/nfs/home/audris/work/c2fb/";
+dir="/nfs/home/*****/work/c2fb/";
 for i in {0..127}; do 
     zcat ${dir}b2tPFull${ver}$i.s |
     cut -d\; -f1,3 |
@@ -89,7 +89,7 @@ zcat data/sample.b2P.s |
 cut -d\; -f1 |
 gzip >data/sample.blobs.s;
 #joining with b2tP
-dir="/nfs/home/audris/work/c2fb/";
+dir="/nfs/home/*****/work/c2fb/";
 for i in {0..127}; do
     LC_ALL=C LANG=C join -t\; \
         <(zcat data/sample.blobs.s) \
@@ -132,7 +132,7 @@ for d in {31536000,63072000}; do
     bound=1588338000;
 done;
 #b2sl
-dir="/nfs/home/audris/work/All.blobs/";
+dir="/nfs/home/*****/work/All.blobs/";
 for i in {0..127}; do
     LC_ALL=C LANG=C join -t\; \
         <(zcat data/sample.blobs.s) \
