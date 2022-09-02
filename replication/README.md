@@ -12,5 +12,10 @@ The contents are:
     - blobs.sh: blob-level data
     - project_sample.py & projects.sh: project-level data
     - survey.sh & survey.ipynb: survey sampling
-- analysis: code written in R for statistical analysis  
+- analysis: code written in R for statistical analysis 
+    - blob.ipynb: blob-level analysis
+    - project.ipynb: project-level analysis
 - survey: the survey questionnaire  
+    - survey0.pdf: preliminary
+    - survey1.pdf: round 1
+    - survey2.pdf: round 2
