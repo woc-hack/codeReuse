@@ -234,3 +234,40 @@ LC_ALL=C LANG=C join -t\; -1 8 -2 1 -a1 \
 awk -F\; '{if (NF == 9) {print $0";"} else {print}}' \
 > tmp;
 mv tmp data/blobs/blobs.rand;
+
+
+for i in {0,1,rand};do
+	zcat data/annoteStats/copies."$i".gz | 
+	cut -d\; -f11,24,25 | 
+	~/lookup/lsort 10G -t\; -u | 
+	gzip >data/annoteStats/copies."$i".bs;
+done;
+
+zcat data/annoteStats/copies.rand.bs| awk -F\; '{if ($3==1) print}' | wc -l #12,788,916
+zcat data/annoteStats/copies.rand.bs| awk -F\; '{if ($3==1 && $2!=1) print}' | wc -l #6,040,295
+
+zcat data/annoteStats/copies.0.bs | wc -l #46,291,939
+zcat data/annoteStats/copies.1.bs | wc -l #39,025,062
+zcat data/annoteStats/copies.rand.bs | wc -l #138,549,423
+
+for i in {0,1,rand}; do
+	zcat data/annoteStats/copies."$i".bs |
+	perl -e '$pb="";
+        while(<STDIN>){
+            chop();
+            ($b,$t,$p)=split(/;/);
+            if($b ne $pb){
+                print "$b;$t;$p\n";
+                $pb=$b;
+            }
+        }
+    ' |
+    gzip >data/annoteStats/copies."$i".ubs;
+done
+
+for i in {0,1,rand}; do
+	zcat data/annoteStats/copies."$i".ubs |
+	cut -d\; -f2,3 |
+	~/lookup/lsort 10G |
+	uniq -c >data/annoteStats/blobCounts."$i";
+done
