@@ -1,4 +1,6 @@
+.ipynb_checkpoints/
 /data
+*.code-workspace
 
 # History files
 .Rhistory

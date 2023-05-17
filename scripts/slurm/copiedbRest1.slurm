@@ -1,0 +1,35 @@
+#!/bin/bash
+#SBATCH -A ACF-UTK0011 
+#SBATCH -J copiedbRest1
+#SBATCH --time=0-24:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --partition=campus
+#SBATCH --output=copiedbRest1.o%j
+#SBATCH --error=copiedbRest1.e%j
+
+ver=U;
+#copied and not copied blobs
+dir="/nfs/home/audris/work/c2fb/";
+for i in {122..127}; do 
+    zcat ${dir}b2tPFull${ver}$i.s |
+    cut -d\; -f1,3 |
+    uniq |
+    LC_ALL=C LANG=C sort -T. -u |
+    cut -d\; -f1 |
+    uniq -d |
+    gzip >data/b2tPFull${ver}$i.copied;
+    echo "File $i copied finished!";
+    LC_ALL=C LANG=C join -t\; -v1 \
+        <(zcat ${dir}b2tPFull${ver}$i.s | cut -d\; -f1,3) \
+        <(zcat data/b2tPFull${ver}$i.copied) |
+    uniq |
+    gzip >data/notCopiedb2PFull${ver}$i.s;
+    echo "File $i b2P finished!";
+    zcat data/notCopiedb2PFull${ver}$i.s |
+    awk -F\; '{print $2";"$1}' |
+    LC_ALL=C LANG=C sort -T. -t\; -k1,1 |
+    gzip >data/P2notCopiedbFull${ver}$i.s;
+    echo "File $i P2b finished!";
+done;
